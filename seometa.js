@@ -1,16 +1,25 @@
 // <Скрипт для исправления SEO-ошибок META тегов>
-const SEOManagerV2 = {
+const SEOMetaManager = {
     // Настройки модулей
     modules: {
+        missing: {
+            status: true,
+            settings: {
+                defaultDomain: 'example.com',
+                suffixTitle: ' | Title',
+                suffixH1: ' | H1',
+                suffixDesc: ' | Desc',
+            },
+        },
         equality: {
             status: true,
             settings: {
-                titleSuffix: '| Title',
-                descSuffix: '| Description',
+                titleSuffix: ' | Title',
+                descSuffix: ' | Description',
             },
         },
         length: {
-            status: true,
+            status: false,
             settings: {
                 titleMin: 30,
                 titleMax: 60,
@@ -19,31 +28,15 @@ const SEOManagerV2 = {
                 filler: '_',
             },
         },
-        missing: {
-            status: true,
-            settings: {
-                defaultDomain: 'example.com',
-                suffixTitle: '| Title',
-                suffixH1: '| H1',
-                suffixDesc: '| Desc',
-            },
-        },
     },
 
     // Инициализация
     init: function() {
-        console.log('Initializing SEO Manager Script');
-        console.log('Modules status:');
-        console.log('- Equality:', this.modules.equality.status);
-        console.log('- Length:', this.modules.length.status);
-        console.log('- Missing Meta:', this.modules.missing.status);
+        console.log('Initializing SEO Manager V2');
+        console.log('Processing order: Missing -> Equality -> Length');
+        console.log('Modules status:', this.modules);
 
-        // Сохраняем оригинальные значения
-        this.originalTitle = document.title;
-        this.originalDesc = document.querySelector('meta[name="description"]')?.content || '';
-        this.originalH1 = document.querySelector('h1')?.textContent.trim() || '';
-
-        // Запуск модулей
+        // Последовательная обработка модулей
         if (this.modules.missing.status) this.handleMissingMeta();
         if (this.modules.equality.status) this.handleEquality();
         if (this.modules.length.status) this.handleLength();
@@ -54,23 +47,27 @@ const SEOManagerV2 = {
         const s = this.modules.missing.settings;
         const len = this.modules.length.settings;
 
+        // Актуальные значения на момент выполнения
+        let currentTitle = document.title;
+        let currentDesc = document.querySelector('meta[name="description"]')?.content || '';
+        let currentH1 = document.querySelector('h1')?.textContent.trim() || '';
+
         // Title
-        if (!this.originalTitle.trim()) {
-            const source = this.originalH1 || this.originalDesc;
-            let newTitle = source 
+        if (!currentTitle.trim()) {
+            const source = currentH1 || currentDesc;
+            currentTitle = source 
                 ? this.adjustTextLength(source, len.titleMin, len.titleMax, len.filler) + s.suffixTitle
                 : `Title | ${s.defaultDomain}`;
-            document.title = newTitle;
+            document.title = currentTitle;
         }
 
         // H1
-        if (!this.originalH1) {
-            const source = this.originalTitle || this.originalDesc;
+        if (!currentH1) {
+            const source = document.title || currentDesc;
             let newH1;
             if (source) {
-                const isTitleSource = source === this.originalTitle;
-                const min = isTitleSource ? len.titleMin : len.descMin;
-                const max = isTitleSource ? len.titleMax : len.descMax;
+                const min = (source === document.title) ? len.titleMin : len.descMin;
+                const max = (source === document.title) ? len.titleMax : len.descMax;
                 newH1 = this.adjustTextLength(source, min, max, len.filler) + s.suffixH1;
             } else {
                 newH1 = `H1 | ${s.defaultDomain}`;
@@ -79,52 +76,53 @@ const SEOManagerV2 = {
             h1.textContent = newH1;
             h1.style.display = 'none';
             document.body.prepend(h1);
+            currentH1 = newH1; // Обновляем значение для последующих модулей
         }
 
         // Description
-        const metaDesc = document.querySelector('meta[name="description"]');
-        if (!metaDesc || !this.originalDesc.trim()) {
-            const source = this.originalTitle || this.originalH1;
+        let metaDesc = document.querySelector('meta[name="description"]');
+        if (!metaDesc || !currentDesc.trim()) {
+            const source = document.title || currentH1;
             let newDesc = source 
                 ? this.adjustTextLength(source, len.descMin, len.descMax, len.filler) + s.suffixDesc
                 : `Description | ${s.defaultDomain}`;
             
             if (!metaDesc) {
-                const meta = document.createElement('meta');
-                meta.name = 'description';
-                meta.content = newDesc;
-                document.head.appendChild(meta);
-            } else {
-                metaDesc.content = newDesc;
+                metaDesc = document.createElement('meta');
+                metaDesc.name = 'description';
+                document.head.appendChild(metaDesc);
             }
+            metaDesc.content = newDesc;
         }
     },
 
     // Модуль равенства
     handleEquality: function() {
         const s = this.modules.equality.settings;
+
+        // Актуальные значения после обработки модуля Missing
+        const currentTitle = document.title;
+        const currentH1 = document.querySelector('h1')?.textContent.trim() || '';
+        const metaDesc = document.querySelector('meta[name="description"]');
+        let currentDesc = metaDesc?.content || '';
         let descModified = false;
 
         // Title == H1
-        if (this.originalTitle && this.originalH1 && this.originalTitle === this.originalH1) {
-            document.title = this.originalTitle + s.titleSuffix;
+        if (currentTitle === currentH1) {
+            document.title = currentTitle + s.titleSuffix;
         }
 
         // Title == Description
-        if (this.originalTitle && this.originalDesc && this.originalTitle === this.originalDesc && !descModified) {
-            const metaDesc = document.querySelector('meta[name="description"]');
-            if (metaDesc) {
-                metaDesc.content = this.originalDesc + s.descSuffix;
-                descModified = true;
-            }
+        if (currentTitle === currentDesc && !descModified) {
+            currentDesc += s.descSuffix;
+            descModified = true;
+            if (metaDesc) metaDesc.content = currentDesc;
         }
 
         // Description == H1
-        if (this.originalDesc && this.originalH1 && this.originalDesc === this.originalH1 && !descModified) {
-            const metaDesc = document.querySelector('meta[name="description"]');
-            if (metaDesc) {
-                metaDesc.content = this.originalDesc + s.descSuffix;
-            }
+        if (currentDesc === currentH1 && !descModified) {
+            currentDesc += s.descSuffix;
+            if (metaDesc) metaDesc.content = currentDesc;
         }
     },
 
@@ -132,15 +130,15 @@ const SEOManagerV2 = {
     handleLength: function() {
         const s = this.modules.length.settings;
 
-        // Title
-        const currentTitle = document.title;
+        // Корректировка Title
+        let currentTitle = document.title;
         const newTitle = this.adjustTextLength(currentTitle, s.titleMin, s.titleMax, s.filler);
         if (newTitle !== currentTitle) document.title = newTitle;
 
-        // Description
+        // Корректировка Description
         const metaDesc = document.querySelector('meta[name="description"]');
         if (metaDesc) {
-            const currentDesc = metaDesc.content;
+            let currentDesc = metaDesc.content;
             const newDesc = this.adjustTextLength(currentDesc, s.descMin, s.descMax, s.filler);
             if (newDesc !== currentDesc) metaDesc.content = newDesc;
         }
@@ -155,5 +153,5 @@ const SEOManagerV2 = {
 };
 
 // Запуск
-document.addEventListener('DOMContentLoaded', () => SEOManagerV2.init());
+document.addEventListener('DOMContentLoaded', () => SEOMetaManager.init());
 // </Скрипт для исправления SEO-ошибок META тегов>
