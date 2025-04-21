@@ -32,7 +32,7 @@ const SEOMetaManager = {
 
     // Инициализация
     init: function() {
-        console.log('Initializing SEO Manager V2');
+        console.log('Initializing SEO Meta Manager');
         console.log('Processing order: Missing -> Equality -> Length');
         console.log('Modules status:', this.modules);
 
