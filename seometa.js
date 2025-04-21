@@ -155,5 +155,5 @@ const SEOManagerV2 = {
 };
 
 // Запуск
-document.addEventListener('DOMContentLoaded', () => SEOManager.init());
+document.addEventListener('DOMContentLoaded', () => SEOManagerV2.init());
 // </Скрипт для исправления SEO-ошибок META тегов>
