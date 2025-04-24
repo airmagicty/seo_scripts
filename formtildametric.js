@@ -1,4 +1,3 @@
-<script>
 document.addEventListener('DOMContentLoaded', function() {
     // Функция для проверки URL и выполнения действий
     function checkHash() {
@@ -17,4 +16,3 @@ document.addEventListener('DOMContentLoaded', function() {
     // Проверяем URL каждые 500 миллисекунд
     setInterval(checkHash, 500);
 });
-</script>

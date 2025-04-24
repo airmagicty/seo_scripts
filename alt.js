@@ -1,63 +1,110 @@
 // <Скрипт для alt и title атрибутов img>
-const ImageAttributeSetter = {
-    // Массив слов для alt и title атрибутов
+const ImageAttributeSetter2 = {
     words: [
-        "пример",
-        "тест",
-        "изображение",
-        "фото",
-        "иллюстрация",
-        "картинка",
-        "дизайн",
-        "концепция"
+        "пример", "тест", "изображение", "фото", 
+        "иллюстрация", "картинка", "дизайн", "концепция"
     ],
-
-    // Функция для получения случайного слова из массива
-    getRandomWord: function() {
-        const randomIndex = Math.floor(Math.random() * this.words.length);
-        return this.words[randomIndex];
+    
+    // Настройки
+    mode: "dynamic",  // "random" или "dynamic"
+    tagLength: null,  // Число или null для автоопределения
+    
+    // Генератор псевдослучайных чисел
+    PRNG: class {
+        constructor(seed) {
+            this.seed = seed;
+        }
+        
+        next() {
+            this.seed = (this.seed * 9301 + 49297) % 233280;
+            return this.seed / 233280;
+        }
     },
-
-    // Метод для установки alt атрибутов для всех изображений на странице
-    setAltAttributes: function() {
+    
+    // Хеш-функция для строки
+    stringToSeed(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            hash = (hash << 5) - hash + str.charCodeAt(i);
+            hash |= 0;
+        }
+        return hash;
+    },
+    
+    // Расчет seed для изображения
+    getSeed(index) {
+        return Math.abs(parseInt(this.stringToSeed(window.location.pathname + index)));
+    },
+    
+    // Автоматический расчет длины тега
+    calculateAutoTagLength() {
+        const imagesCount = document.querySelectorAll('img').length;
+        const wordsCount = this.words.length;
+        return Math.max(1, Math.floor(imagesCount / wordsCount));
+    },
+    
+    // Генерация тега для dynamic режима
+    getDynamicTag(index, length) {
+        const prng = new this.PRNG(this.getSeed(index));
+        const result = Array.from({length}, () => {
+            const randomValue = prng.next();
+            return this.words[Math.floor(randomValue * this.words.length)];
+        }).join(' ');
+        // console.log("mt", this.stringToSeed(window.location.pathname + index), this.getSeed(index), Math.floor(prng.next()),Math.floor(prng.next() * this.words.length));
+        return result;
+    },
+    
+    // Генерация тега для random режима
+    getRandomTag(length) {
+        return Array.from({length}, () => 
+            this.words[Math.floor(Math.random() * this.words.length)]
+        ).join(' ');
+    },
+    
+    // Установка атрибутов
+    setAltAttributes() {
         const imgs = document.querySelectorAll('img');
-        let changedCount = 0; // Счетчик измененных alt атрибутов
-
-        imgs.forEach(img => {
-            // Проверяем, есть ли у изображения alt атрибут и не пустой ли он
-            if (!img.hasAttribute('alt') || img.getAttribute('alt').trim() === '') {
-                // Устанавливаем alt атрибут со случайным словом
-                img.setAttribute('alt', this.getRandomWord());
-                changedCount++; // Увеличиваем счетчик измененных атрибутов
+        const length = this.tagLength ?? this.calculateAutoTagLength();
+        let counter = 0;
+        
+        imgs.forEach((img, index) => {
+            const value = this.mode === "dynamic" 
+                ? this.getDynamicTag(index, length) 
+                : this.getRandomTag(length);
+            
+            if (img.getAttribute('alt') == '' || img.getAttribute('alt') == null) {
+                // console.log("alt",img.getAttribute('alt'));
+                img.setAttribute('alt', value);
+                counter++;
             }
         });
-
-        // Выводим сообщение в консоль о количестве измененных alt тегов
-        console.log(`Изменено alt тегов: ${changedCount}`);
+        
+        console.log(`Установлено alt тегов: ${counter}`);
     },
-
-    // Метод для установки title атрибутов для всех изображений на странице
-    setTitleAttributes: function() {
+    
+    setTitleAttributes() {
         const imgs = document.querySelectorAll('img');
-        let changedCount = 0; // Счетчик измененных title атрибутов
-
-        imgs.forEach(img => {
-            // Проверяем, есть ли у изображения title атрибут и не пустой ли он
-            if (!img.hasAttribute('title') || img.getAttribute('title').trim() === '') {
-                // Устанавливаем title атрибут со случайным словом
-                img.setAttribute('title', this.getRandomWord());
-                changedCount++; // Увеличиваем счетчик измененных атрибутов
+        const length = this.tagLength ?? this.calculateAutoTagLength();
+        let counter = 0;
+        
+        imgs.forEach((img, index) => {
+            const value = this.mode === "dynamic" 
+                ? this.getDynamicTag(index, length) 
+                : this.getRandomTag(length);
+            
+            if (img.getAttribute('title') == '' || img.getAttribute('title') == null) {
+                // console.log("title",img.getAttribute('title'));
+                img.setAttribute('title', value);
+                counter++;
             }
         });
-
-        // Выводим сообщение в консоль о количестве измененных title тегов
-        console.log(`Изменено title тегов: ${changedCount}`);
+        
+        console.log(`Установлено title тегов: ${counter}`);
     }
 };
 
-// Вызов методов для установки alt и title атрибутов
-document.addEventListener('DOMContentLoaded', function() {
-    ImageAttributeSetter.setAltAttributes();
-    ImageAttributeSetter.setTitleAttributes();
- }, false);
+document.addEventListener('DOMContentLoaded', () => {
+    ImageAttributeSetter2.setAltAttributes();
+    ImageAttributeSetter2.setTitleAttributes();
+});
  // </Скрипт для alt и title атрибутов img>
