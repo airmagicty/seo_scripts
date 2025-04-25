@@ -19,11 +19,11 @@ const SEOMetaManager = {
             },
         },
         length: {
-            status: false,
+            status: true,
             settings: {
-                titleMin: 30,
+                titleMin: 10,
                 titleMax: 60,
-                descMin: 50,
+                descMin: 20,
                 descMax: 160,
                 filler: '_',
             },
@@ -32,9 +32,9 @@ const SEOMetaManager = {
 
     // Инициализация
     init: function() {
-        console.log('Initializing SEO Meta Manager');
-        console.log('Processing order: Missing -> Equality -> Length');
-        console.log('Modules status:', this.modules);
+        console.log('Initializing SEO Meta Manager', this.modules);
+        // console.log('Processing order: Missing -> Equality -> Length');
+        // console.log('Modules status:', this.modules);
 
         // Последовательная обработка модулей
         if (this.modules.missing.status) this.handleMissingMeta();
