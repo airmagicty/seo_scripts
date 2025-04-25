@@ -1,4 +1,4 @@
-// Создаем объект LinkProcessor с методом для обработки ссылок
+// <Создаем объект LinkProcessor с методом для обработки ссылок nofollow>
 const LinkProcessor = {
     // Метод для добавления rel="nofollow" к внешним ссылкам
     addNoFollowToExternalLinks: function(domain) {
@@ -30,8 +30,8 @@ const LinkProcessor = {
       // Выводим сообщение в консоль о количестве добавленных nofollow
       console.log(`Количество добавленных тегов rel="nofollow": ${nofollowCount}`);
     }
-  };
+};
   
-  // Пример вызова метода с доменом
-  LinkProcessor.addNoFollowToExternalLinks('https://residence888.ru');
-  
+// Пример вызова метода с доменом
+LinkProcessor.addNoFollowToExternalLinks('https://residence888.ru');
+// </Создаем объект LinkProcessor с методом для обработки ссылок nofollow>
